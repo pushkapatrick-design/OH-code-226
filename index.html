@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en" style="margin:0;padding:0;width:100%;height:100%;overflow:hidden;">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code 226 – SDG&amp;E Climbing Space Obstruction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:100%; height:100%; overflow:hidden; background:#0a0a0f; font-family:'Outfit',sans-serif; }
+
+  #sl-wrapper {
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; background:#0a0a0f;
+  }
+
+  #sl-stage {
+    width:1920px; height:1080px;
+    transform-origin: center center;
+    position:relative;
+    overflow:hidden;
+    background: linear-gradient(145deg, #0d1117 0%, #111827 40%, #0f172a 100%);
+  }
+
+  /* Grid overlay */
+  #sl-stage::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events:none; z-index:0;
+  }
+
+  /* Accent glow */
+  .glow-orb {
+    position:absolute; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0;
+  }
+  .glow-1 { width:500px; height:500px; background:rgba(245,158,11,0.08); top:-100px; right:200px; }
+  .glow-2 { width:400px; height:400px; background:rgba(56,189,248,0.06); bottom:0; left:100px; }
+
+  /* Top bar */
+  .top-bar {
+    position:absolute; top:0; left:0; right:0; height:6px; z-index:10;
+    background: linear-gradient(90deg, #f59e0b, #f97316, #ef4444, #f59e0b);
+    background-size:300% 100%;
+    animation: barShimmer 4s ease infinite;
+  }
+  @keyframes barShimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+  /* Header area */
+  .header-zone {
+    position:absolute; top:36px; left:72px; right:72px; z-index:5;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .header-left { display:flex; align-items:center; gap:18px; flex:1; min-width:0; }
+  .header-title-section { display:flex; flex-direction:column; gap:8px; flex:1; min-width:0; }
+  .code-badge {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color:#0a0a0f; font-family:'JetBrains Mono',monospace;
+    font-weight:700; font-size:22px; padding:10px 22px;
+    border-radius:10px; letter-spacing:1px;
+    box-shadow: 0 0 30px rgba(245,158,11,0.3);
+    flex-shrink:0;
+  }
+  .header-title {
+    color:#f1f5f9; font-size:42px; font-weight:700; letter-spacing:-0.5px;
+  }
+  .header-title span { color:#f59e0b; }
+  .header-logo {
+    height:36px; width:auto; flex-shrink:0;
+    margin-right: 0;
+    margin-left: -60px;
+    margin-bottom: 8px;
+  }
+  .header-right {
+    display:flex; align-items:center; gap:12px;
+    color:#64748b; font-size:14px; font-weight:500;
+  }
+  .module-tag {
+    background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25);
+    color:#f59e0b; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600;
+  }
+
+  /* Main content layout */
+  .content-area {
+    position:absolute; top:120px; left:72px; right:72px; bottom:80px;
+    display:grid; grid-template-columns:1fr 1fr; gap:48px;
+    z-index:5;
+    align-items: center;
+  }
+
+  /* Left column */
+  .left-col { display:flex; flex-direction:column; gap:24px; justify-content:center; }
+
+  .info-card {
+    background: rgba(17,24,39,0.7);
+    border:1px solid rgba(245,158,11,0.12);
+    border-radius:16px; padding:32px;
+    backdrop-filter:blur(10px);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .info-card:hover {
+    border-color:rgba(245,158,11,0.3);
+    box-shadow: 0 0 40px rgba(245,158,11,0.06);
+  }
+
+  .card-header {
+    display:flex; align-items:center; gap:14px; margin-bottom:18px;
+  }
+  .card-icon {
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .card-icon.orange { background:rgba(245,158,11,0.15); }
+  .card-icon.red { background:rgba(239,68,68,0.15); }
+  .card-icon.blue { background:rgba(56,189,248,0.15); }
+
+  .card-label {
+    font-size:11px; text-transform:uppercase; letter-spacing:2px;
+    color:#64748b; font-weight:600;
+  }
+  .card-title {
+    font-size:40px; font-weight:700; color:#e2e8f0;
+  }
+
+  .narration-text {
+    font-size:20px; line-height:1.6; color:#94a3b8; font-weight:400;
+  }
+  .narration-text strong { color:#f1f5f9; font-weight:600; }
+  .narration-text .hl { color:#f59e0b; font-weight:600; }
+  .narration-text .code-inline {
+    font-family:'JetBrains Mono',monospace;
+    background:rgba(245,158,11,0.12); color:#fbbf24;
+    padding:3px 10px; border-radius:6px; font-size:1em; font-weight:600;
+  }
+
+  /* Warning card */
+  .warning-card {
+    background: rgba(239,68,68,0.06);
+    border:1px solid rgba(239,68,68,0.2);
+    border-radius:16px; padding:32px;
+    display:flex; align-items:flex-start; gap:16px;
+  }
+  .warning-icon {
+    width:44px; height:44px; min-width:44px; border-radius:12px;
+    background:rgba(239,68,68,0.15);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .warning-title { color:#f87171; font-size:36px; font-weight:700; text-transform:none; letter-spacing:0px; margin-bottom:12px; }
+  .warning-text { color:#cbd5e1; font-size:20px; line-height:1.6; }
+  .warning-text .hl-red { color:#f87171; font-weight:600; }
+
+  /* Right column */
+  .right-col { display:flex; flex-direction:column; gap:24px; }
+
+  /* Visual reference card */
+  .visual-card {
+    background: rgba(17,24,39,0.7);
+    border:1px solid rgba(56,189,248,0.12);
+    border-radius:16px; overflow:hidden; flex:1;
+    display:flex; flex-direction:column;
+  }
+  .visual-card-header {
+    padding:18px 24px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid rgba(56,189,248,0.08);
+  }
+  .visual-card-label {
+    display:flex; align-items:center; gap:10px;
+    font-size:14px; font-weight:600; color:#94a3b8;
+  }
+  .visual-card-label .dot { width:8px; height:8px; border-radius:50%; background:#38bdf8; animation: pulse 2s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .visual-body {
+    flex:1; display:flex; align-items:center; justify-content:center;
+    padding:8px; position:relative;
+    background: radial-gradient(ellipse at center, rgba(56,189,248,0.03) 0%, transparent 70%);
+  }
+  .visual-body {
+    position: relative;
+  }
+
+  .visual-body img {
+    width:100%; height:100%; object-fit:contain;
+    border-radius:10px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    cursor: pointer;
+    transition: transform 0.5s ease;
+  }
+  .visual-body img:hover {
+    filter: brightness(1.1);
+  }
+
+  .visual-body img.zoomed {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.8);
+    z-index: 1000;
+    width: 80vw;
+    height: 80vh;
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  }
+
+
+
+  /* Interactive quiz section */
+  .key-points-card {
+    background: rgba(17,24,39,0.7);
+    border:1px solid rgba(56,189,248,0.12);
+    border-radius:16px; padding:28px 32px;
+    backdrop-filter:blur(10px);
+  }
+
+  .key-points-list { display:flex; flex-direction:column; gap:16px; }
+  .key-point {
+    display:flex; align-items:flex-start; gap:16px;
+    padding:14px 16px; border-radius:12px;
+    background:rgba(15,23,42,0.5);
+    border:1px solid rgba(56,189,248,0.08);
+    transition:all 0.3s;
+  }
+  .key-point:hover {
+    border-color:rgba(56,189,248,0.25);
+    background:rgba(56,189,248,0.04);
+  }
+
+  .kp-check, .kp-x {
+    width:32px; height:32px; min-width:32px;
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:700; flex-shrink:0;
+  }
+  .kp-check {
+    background:rgba(34,197,94,0.15); color:#4ade80;
+  }
+  .kp-x {
+    background:rgba(239,68,68,0.15); color:#f87171;
+  }
+
+  .kp-text {
+    font-size:15px; color:#94a3b8; font-weight:500; line-height:1.5;
+  }
+  .kp-text strong { color:#e2e8f0; font-weight:600; }
+  .key-point:hover .kp-text { color:#e2e8f0; }
+
+  @keyframes fadeSlideUp {
+    from { opacity:0; transform:translateY(8px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+
+
+  /* Entrance animations */
+  .anim-in {
+    opacity:0; transform:translateY(20px);
+    animation: slideIn 0.6s ease forwards;
+  }
+  .anim-in.d1 { animation-delay:0.1s; }
+  .anim-in.d2 { animation-delay:0.25s; }
+  .anim-in.d3 { animation-delay:0.4s; }
+  .anim-in.d4 { animation-delay:0.55s; }
+  @keyframes slideIn {
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  /* Staggered entrance animations */
+  .info-card { animation: slideIn 0.7s ease forwards; opacity: 0; transform: translateY(30px); }
+  .info-card:nth-child(1) { animation-delay: 0.2s; }
+  .info-card:nth-child(2) { animation-delay: 0.4s; }
+
+  .warning-card { animation: slideIn 0.7s ease forwards; opacity: 0; transform: translateY(30px); animation-delay: 0.6s; }
+
+  .visual-card { animation: slideIn 0.7s ease forwards; opacity: 0; transform: translateY(30px); animation-delay: 0.8s; }
+
+  .header-zone { animation: fadeInDown 0.6s ease forwards; opacity: 0; transform: translateY(-20px); animation-delay: 0s; }
+
+  @keyframes fadeInDown {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="sl-wrapper">
+   <div id="sl-stage">
+    <!-- Glows -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="top-bar"></div><!-- Header -->
+    <div class="header-zone anim-in d1">
+     <div class="header-left">
+      <div class="header-title-section">
+       <div class="header-title" id="headerTitle">
+        SDG&amp;E <span>Climbing Space</span> Obstruction
+       </div><img src="https://github.com/pushkapatrick-design/ancillary-providers/raw/main/Screenshot%202026-02-24%20134104.png" alt="SDG&amp;E Logo" loading="lazy" class="header-logo" onerror="console.error('Image failed to load:', this.src); this.style.display='none';">
+      </div>
+      <div class="code-badge" id="codeBadge">
+       CODE 226
+      </div>
+     </div>
+     <div class="header-right">
+     </div>
+    </div><!-- Content -->
+    <div class="content-area">
+     <!-- Left Column -->
+     <div class="left-col">
+      <div class="info-card anim-in d2">
+       <div class="card-header">
+        <div class="card-icon orange">
+         ⚡
+        </div>
+        <div>
+         <div class="card-label">
+          When to Use
+         </div>
+         <div class="card-title">
+          Reporting Climbing Space Infractions
+         </div>
+        </div>
+       </div>
+       <div class="narration-text">
+        For <strong>Climbing Space infractions</strong> caused by <span class="hl">SDG&amp;E</span>, use code <span class="code-inline">226</span> — <strong>SDG&amp;E Climbing Space Obstruction</strong> — to report this condition.
+       </div>
+      </div>
+      <div class="warning-card anim-in d3">
+       <div class="warning-icon">
+        ⚠️
+       </div>
+       <div>
+        <div class="warning-title">
+         Important Exception
+        </div>
+        <div class="warning-text">
+         <span class="hl-red">Don't</span> enter this code where there is <strong>quadrant climbing space availability</strong> below secondary.
+        </div>
+       </div>
+      </div>
+     </div><!-- Right Column -->
+     <div class="right-col">
+      <div class="visual-card anim-in d4">
+       <div class="visual-body">
+        <img src="https://github.com/pushkapatrick-design/OH-code-226/raw/main/slide%2035.png" alt="Code 226 Reference Visual" loading="lazy" onerror="console.error('Image failed to load:', this.src); this.style.background='#1e293b'; this.alt='Image unavailable';">
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+  // === Toggle Zoom ===
+  let isZoomed = false;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const img = document.querySelector('.visual-body img');
+
+    img.addEventListener('click', () => {
+      isZoomed = !isZoomed;
+      if (isZoomed) {
+        img.classList.add('zoomed');
+      } else {
+        img.classList.remove('zoomed');
+      }
+    });
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isZoomed) {
+        isZoomed = false;
+        img.classList.remove('zoomed');
+      }
+    });
+  });
+
+  // === Responsive Scaler ===
+  const wrapper = document.getElementById('sl-wrapper');
+  const stage = document.getElementById('sl-stage');
+  const W = 1920, H = 1080;
+
+  function rescale() {
+    const iw = wrapper.clientWidth;
+    const ih = wrapper.clientHeight;
+    const scale = Math.min(iw / W, ih / H);
+    stage.style.transform = 'scale(' + scale + ')';
+  }
+
+  rescale();
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(rescale).observe(wrapper);
+  }
+  window.addEventListener('resize', rescale);
+
+
+
+  // === Element SDK Init ===
+  const defaultConfig = {
+    slide_title: 'SDG&E Climbing Space Obstruction',
+    code_label: 'CODE 226',
+    background_color: '#0d1117',
+    surface_color: '#111827',
+    text_color: '#e2e8f0',
+    accent_color: '#f59e0b',
+    warning_color: '#ef4444',
+    font_family: 'Outfit',
+    font_size: 16
+  };
+
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => {
+      const bg = config.background_color || defaultConfig.background_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const accent = config.accent_color || defaultConfig.accent_color;
+      const warn = config.warning_color || defaultConfig.warning_color;
+      const font = config.font_family || defaultConfig.font_family;
+      const baseSize = config.font_size || defaultConfig.font_size;
+
+      // Background
+      document.getElementById('sl-stage').style.background =
+        'linear-gradient(145deg, ' + bg + ' 0%, ' + surface + ' 40%, ' + bg + ' 100%)';
+      document.getElementById('sl-wrapper').style.background = bg;
+
+      // Title / Badge
+      const title = config.slide_title || defaultConfig.slide_title;
+      const code = config.code_label || defaultConfig.code_label;
+      document.getElementById('codeBadge').textContent = code;
+      document.getElementById('codeBadge').style.background = 'linear-gradient(135deg,' + accent + ',' + accent + 'cc)';
+
+      const headerEl = document.getElementById('headerTitle');
+      headerEl.textContent = title;
+      headerEl.style.color = text;
+
+      // Fonts
+      const stack = font + ', Outfit, sans-serif';
+      document.getElementById('sl-stage').style.fontFamily = stack;
+
+      // Text color on narration
+      document.querySelectorAll('.narration-text').forEach(el => el.style.color = text + 'aa');
+      document.querySelectorAll('.card-title').forEach(el => el.style.color = text);
+
+      // Accent colors
+      document.querySelectorAll('.hl').forEach(el => el.style.color = accent);
+      document.querySelectorAll('.code-inline').forEach(el => {
+        el.style.color = accent;
+        el.style.background = accent + '1a';
+      });
+
+      // Warning
+      document.querySelectorAll('.hl-red').forEach(el => el.style.color = warn);
+      document.querySelectorAll('.warning-title').forEach(el => el.style.color = warn);
+
+      // Font sizing
+      document.querySelectorAll('.narration-text').forEach(el => el.style.fontSize = (baseSize * 1.25) + 'px');
+      document.querySelectorAll('.card-title').forEach(el => el.style.fontSize = (baseSize * 2.5) + 'px');
+      document.querySelectorAll('.card-label').forEach(el => el.style.fontSize = (baseSize * 0.69) + 'px');
+      document.querySelectorAll('.warning-text').forEach(el => el.style.fontSize = (baseSize * 1.25) + 'px');
+      document.querySelectorAll('.warning-title').forEach(el => el.style.fontSize = (baseSize * 2.25) + 'px');
+
+      // Surface cards
+      document.querySelectorAll('.info-card, .quiz-card').forEach(el => {
+        el.style.background = surface + 'b3';
+        el.style.borderColor = accent + '1e';
+      });
+      document.querySelectorAll('.visual-card').forEach(el => {
+        el.style.background = surface + 'b3';
+      });
+
+      // Top bar
+      document.querySelector('.top-bar').style.background =
+        'linear-gradient(90deg,' + accent + ',' + accent + 'cc,' + warn + ',' + accent + ')';
+    },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+        { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+        { get: () => config.warning_color || defaultConfig.warning_color, set: (v) => { config.warning_color = v; window.elementSdk.setConfig({ warning_color: v }); } }
+      ],
+      borderables: [],
+      fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+      fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['slide_title', config.slide_title || defaultConfig.slide_title],
+      ['code_label', config.code_label || defaultConfig.code_label]
+    ])
+  });
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dd457a2c3374747',t:'MTc3MzY3MDIzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
